@@ -17,7 +17,6 @@ import qrImage from "./assets/images/qr/qr.png";
 
 const MOBILE_DRAFT_STORAGE_KEY = "tanishq-mobile-draft";
 const MOBILE_SUBMISSION_STORAGE_KEY = "tanishq-mobile-submission-id";
-
 const SubmissionContext = createContext(null);
 
 function readStoredDraft() {
