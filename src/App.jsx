@@ -14,7 +14,8 @@ import mobileContainerBackground from "./assets/images/mobile/mobile-page-contai
 import mobilePageBackground from "./assets/images/mobile/mobile-page-bc-image.png";
 import qrBackground from "./assets/images/qr/qr-page-image.png";
 import qrImage from "./assets/images/qr/qr.png";
-import tanishq30image from "./assets/images/mobile/tanishq-30.png"
+import tanishq30image from "./assets/images/mobile/tanishq-30.png";
+import tanishqlogo from "./assets/images/mobile/tanishq-logo.png";
 
 const MOBILE_DRAFT_STORAGE_KEY = "tanishq-mobile-draft";
 const MOBILE_SUBMISSION_STORAGE_KEY = "tanishq-mobile-submission-id";
@@ -864,7 +865,7 @@ function MobilePhotoPage() {
       <div className="mobile-shell">
         <h1 className="mobile-video-title">
           Click my photo for Tanishq
-          <br />
+          <br/>
           30 years
         </h1>
 
@@ -967,8 +968,6 @@ function MobileConsentPage() {
   return (
     <ScreenPage background={mobilePageBackground} className="mobile-consent-page">
       <div className="mobile-shell mobile-consent-shell">
-        <section className="mobile-consent-card">
-          <div className="mobile-consent-inner">
             <h1 className="mobile-consent-title">Consent form</h1>
 
             <div className="mobile-consent-copy">
@@ -1005,6 +1004,10 @@ function MobileConsentPage() {
                 Tanishq Team
               </p>
             </div>
+             
+            <div>
+              <img src={tanishqlogo} alt="tanishq-logo" className="tanishqlogo"/>
+            </div>
 
             <div className="mobile-consent-actions">
               <button
@@ -1024,8 +1027,6 @@ function MobileConsentPage() {
                 Proceed without consent
               </button>
             </div>
-          </div>
-        </section>
       </div>
     </ScreenPage>
   );
