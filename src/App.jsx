@@ -106,6 +106,59 @@ function blobToDataUrl(blob) {
   });
 }
 
+function syncCanvasFrame(video, canvas) {
+  const sourceWidth = video.videoWidth || 720;
+  const sourceHeight = video.videoHeight || 1280;
+  const canvasBounds = canvas.getBoundingClientRect();
+  const targetRatio =
+    canvasBounds.width > 0 && canvasBounds.height > 0
+      ? canvasBounds.width / canvasBounds.height
+      : 9 / 16;
+  const dominantSourceDimension = Math.max(sourceWidth, sourceHeight);
+  const nextHeight = Math.max(1, Math.round(dominantSourceDimension));
+  const nextWidth = Math.max(1, Math.round(nextHeight * targetRatio));
+
+  if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
+    canvas.width = nextWidth;
+    canvas.height = nextHeight;
+  }
+
+  const context = canvas.getContext("2d");
+  if (!context) {
+    return false;
+  }
+
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  const sourceRatio = sourceWidth / sourceHeight;
+
+  let cropWidth = sourceWidth;
+  let cropHeight = sourceHeight;
+  let cropX = 0;
+  let cropY = 0;
+
+  if (sourceRatio > targetRatio) {
+    cropWidth = sourceHeight * targetRatio;
+    cropX = (sourceWidth - cropWidth) / 2;
+  } else if (sourceRatio < targetRatio) {
+    cropHeight = sourceWidth / targetRatio;
+    cropY = (sourceHeight - cropHeight) / 2;
+  }
+
+  context.drawImage(
+    video,
+    cropX,
+    cropY,
+    cropWidth,
+    cropHeight,
+    0,
+    0,
+    canvas.width,
+    canvas.height,
+  );
+
+  return true;
+}
+
 async function submitSubmission(payload) {
   const response = await fetch("/api/submissions", {
     method: "POST",
@@ -269,9 +322,12 @@ function MobileVideoPage() {
   const navigate = useNavigate();
   const { draft, setSubmissionId } = useSubmissionDraft();
   const liveVideoRef = useRef(null);
+  const livePreviewCanvasRef = useRef(null);
   const playbackVideoRef = useRef(null);
   const recorderRef = useRef(null);
   const streamRef = useRef(null);
+  const captureStreamRef = useRef(null);
+  const animationFrameRef = useRef(0);
   const chunksRef = useRef([]);
   const [recordingState, setRecordingState] = useState("idle");
   const [previewMode, setPreviewMode] = useState("idle");
@@ -288,8 +344,40 @@ function MobileVideoPage() {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
       }
+
+      if (captureStreamRef.current) {
+        captureStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
+
+      if (animationFrameRef.current) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+      }
     };
   }, [recordedUrl]);
+
+  function stopCanvasLoop() {
+    if (animationFrameRef.current) {
+      window.cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = 0;
+    }
+  }
+
+  function startCanvasLoop() {
+    stopCanvasLoop();
+
+    const drawFrame = () => {
+      const video = liveVideoRef.current;
+      const canvas = livePreviewCanvasRef.current;
+
+      if (video && canvas && video.readyState >= 2) {
+        syncCanvasFrame(video, canvas);
+      }
+
+      animationFrameRef.current = window.requestAnimationFrame(drawFrame);
+    };
+
+    animationFrameRef.current = window.requestAnimationFrame(drawFrame);
+  }
 
   async function ensureStream() {
     if (streamRef.current) {
@@ -311,6 +399,8 @@ function MobileVideoPage() {
       liveVideoRef.current.srcObject = stream;
       await liveVideoRef.current.play().catch(() => {});
     }
+
+    startCanvasLoop();
 
     return stream;
   }
@@ -352,10 +442,26 @@ function MobileVideoPage() {
       setRecordedBlob(null);
       setPreviewMode("live");
       chunksRef.current = [];
+      const previewCanvas = livePreviewCanvasRef.current;
+      const canvasStream = previewCanvas?.captureStream?.(30);
+
+      if (!previewCanvas || !canvasStream) {
+        setRecordingState("idle");
+        return;
+      }
+
+      captureStreamRef.current?.getTracks().forEach((track) => track.stop());
+
+      const audioTrack = stream.getAudioTracks()[0];
+      if (audioTrack) {
+        canvasStream.addTrack(audioTrack);
+      }
+
+      captureStreamRef.current = canvasStream;
 
       const recorder = mimeType
-        ? new MediaRecorder(stream, { mimeType })
-        : new MediaRecorder(stream);
+        ? new MediaRecorder(canvasStream, { mimeType })
+        : new MediaRecorder(canvasStream);
 
       recorderRef.current = recorder;
 
@@ -444,10 +550,15 @@ function MobileVideoPage() {
             <div className="mobile-video-preview-shell">
               <video
                 ref={liveVideoRef}
-                className={`mobile-video-preview ${previewMode === "recorded" ? "mobile-video-preview-hidden" : ""}`}
+                className="mobile-camera-source"
                 autoPlay
                 muted
                 playsInline
+                aria-hidden="true"
+              />
+              <canvas
+                ref={livePreviewCanvasRef}
+                className={`mobile-video-preview ${previewMode === "recorded" ? "mobile-video-preview-hidden" : ""}`}
               />
               <video
                 ref={playbackVideoRef}
@@ -507,7 +618,9 @@ function MobilePhotoPage() {
   const navigate = useNavigate();
   const { draft, setSubmissionId } = useSubmissionDraft();
   const liveVideoRef = useRef(null);
+  const livePreviewCanvasRef = useRef(null);
   const streamRef = useRef(null);
+  const animationFrameRef = useRef(0);
   const [photoUrl, setPhotoUrl] = useState("");
   const [photoFile, setPhotoFile] = useState(null);
   const [photoMode, setPhotoMode] = useState("idle");
@@ -522,8 +635,36 @@ function MobilePhotoPage() {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
       }
+
+      if (animationFrameRef.current) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+      }
     };
   }, [photoUrl]);
+
+  function stopCanvasLoop() {
+    if (animationFrameRef.current) {
+      window.cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = 0;
+    }
+  }
+
+  function startCanvasLoop() {
+    stopCanvasLoop();
+
+    const drawFrame = () => {
+      const video = liveVideoRef.current;
+      const canvas = livePreviewCanvasRef.current;
+
+      if (video && canvas && video.readyState >= 2) {
+        syncCanvasFrame(video, canvas);
+      }
+
+      animationFrameRef.current = window.requestAnimationFrame(drawFrame);
+    };
+
+    animationFrameRef.current = window.requestAnimationFrame(drawFrame);
+  }
 
   async function ensurePhotoStream() {
     if (streamRef.current) {
@@ -546,6 +687,8 @@ function MobilePhotoPage() {
       await liveVideoRef.current.play().catch(() => {});
     }
 
+    startCanvasLoop();
+
     return stream;
   }
 
@@ -558,6 +701,8 @@ function MobilePhotoPage() {
     if (liveVideoRef.current) {
       liveVideoRef.current.srcObject = null;
     }
+
+    stopCanvasLoop();
   }
 
   async function handlePhotoClick() {
@@ -575,22 +720,14 @@ function MobilePhotoPage() {
       return;
     }
 
-    const video = liveVideoRef.current;
-    const width = video.videoWidth || 720;
-    const height = video.videoHeight || 1280;
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
+    const previewCanvas = livePreviewCanvasRef.current;
 
-    const context = canvas.getContext("2d");
-    if (!context) {
+    if (!previewCanvas) {
       return;
     }
 
-    context.drawImage(video, 0, 0, width, height);
-
     const blob = await new Promise((resolve) => {
-      canvas.toBlob(resolve, "image/jpeg", 0.92);
+      previewCanvas.toBlob(resolve, "image/jpeg", 0.92);
     });
 
     if (!blob) {
@@ -656,10 +793,15 @@ function MobilePhotoPage() {
             <div className="mobile-video-preview-shell mobile-photo-preview-shell">
               <video
                 ref={liveVideoRef}
-                className={`mobile-video-preview ${photoMode === "live" ? "" : "mobile-video-preview-hidden"}`}
+                className="mobile-camera-source"
                 autoPlay
                 muted
                 playsInline
+                aria-hidden="true"
+              />
+              <canvas
+                ref={livePreviewCanvasRef}
+                className={`mobile-video-preview ${photoMode === "live" ? "" : "mobile-video-preview-hidden"}`}
               />
               {photoMode === "captured" && photoUrl ? (
                 <img
