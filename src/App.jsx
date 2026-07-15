@@ -246,14 +246,6 @@ function MobileHomePage() {
                 type="button"
                 className="mobile-action-button"
                 disabled={!hasRequiredDraftFields}
-                onClick={() => navigate("/mobile/message")}
-              >
-                Write my wishes to Tanishq for 30 years
-              </button>
-              <button
-                type="button"
-                className="mobile-action-button"
-                disabled={!hasRequiredDraftFields}
                 onClick={() => navigate("/mobile/photo")}
               >
                 Click my photo for Tanishq 30 years
@@ -726,104 +718,6 @@ function MobilePhotoPage() {
   );
 }
 
-function MobileMessagePage() {
-  const navigate = useNavigate();
-  const { draft, setSubmissionId } = useSubmissionDraft();
-  const [messageText, setMessageText] = useState("");
-  const [messagePreview, setMessagePreview] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  async function handleMessageSubmit() {
-    const trimmedMessage = messageText.trim();
-    if (!trimmedMessage || isSubmitting) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const submission = await submitSubmission({
-        name: draft.guestName.trim(),
-        landingMessage: draft.personalizedMessage.trim(),
-        pageType: "message",
-        pagePayload: {
-          wishText: trimmedMessage,
-        },
-      });
-
-      setSubmissionId(submission.submissionId || "");
-      navigate("/mobile/consent");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  return (
-    <ScreenPage background={mobilePageBackground} className="mobile-message-page">
-      <div className="mobile-shell">
-        <h1 className="mobile-video-title">
-          Write my wishes to Tanishq
-          <br />
-          for 30 years
-        </h1>
-
-        <section className="mobile-video-card">
-          <div className="mobile-video-card-content">
-            <div className="mobile-video-preview-shell mobile-message-preview-shell">
-              {messagePreview ? (
-                <div className="mobile-message-preview-text">
-                  {messageText.trim() || "Your message preview will appear here"}
-                </div>
-              ) : (
-                <textarea
-                  className="mobile-message-input"
-                  value={messageText}
-                  onChange={(event) => setMessageText(event.target.value)}
-                  placeholder="Write your wishes for Tanishq here"
-                  rows="10"
-                />
-              )}
-            </div>
-            <img
-              className="mobile-video-card-overlay"
-              src={mobileVideoFrameOverlay}
-              alt=""
-              aria-hidden="true"
-            />
-            <button
-              type="button"
-              className="mobile-video-record-button"
-              onClick={() => setMessagePreview(false)}
-              disabled={isSubmitting}
-            >
-              Write message
-            </button>
-          </div>
-        </section>
-
-        <div className="mobile-video-footer-actions">
-          <button
-            type="button"
-            className="mobile-video-small-button"
-            onClick={() => setMessagePreview(true)}
-            disabled={isSubmitting}
-          >
-            Preview
-          </button>
-          <button
-            type="button"
-            className="mobile-video-small-button mobile-video-small-button-edit"
-            onClick={handleMessageSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Sending..." : "Submit"}
-          </button>
-        </div>
-      </div>
-    </ScreenPage>
-  );
-}
-
 function MobileConsentPage() {
   const navigate = useNavigate();
   const { submissionId, setSubmissionId } = useSubmissionDraft();
@@ -922,7 +816,6 @@ function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/qr" element={<QrPage />} />
       <Route path="/mobile" element={<MobileHomePage />} />
-      <Route path="/mobile/message" element={<MobileMessagePage />} />
       <Route path="/mobile/photo" element={<MobilePhotoPage />} />
       <Route path="/mobile/video" element={<MobileVideoPage />} />
       <Route path="/mobile/consent" element={<MobileConsentPage />} />
