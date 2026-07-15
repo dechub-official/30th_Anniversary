@@ -14,6 +14,7 @@ import mobileContainerBackground from "./assets/images/mobile/mobile-page-contai
 import mobilePageBackground from "./assets/images/mobile/mobile-page-bc-image.png";
 import qrBackground from "./assets/images/qr/qr-page-image.png";
 import qrImage from "./assets/images/qr/qr.png";
+import tanishq30image from "./assets/images/mobile/tanishq-30.png"
 
 const MOBILE_DRAFT_STORAGE_KEY = "tanishq-mobile-draft";
 const MOBILE_SUBMISSION_STORAGE_KEY = "tanishq-mobile-submission-id";
@@ -250,21 +251,15 @@ function MobileHomePage() {
   return (
     <ScreenPage background={mobilePageBackground} className="mobile-home-page">
       <div className="mobile-shell">
-        <h1 className="mobile-home-title">
-          Write my wishes to Tanishq
+          <h1 className="mobile-home-title">
+              Write my wishes to Tanishq
           <br />
           for 30 years
-        </h1>
-
-        <section className="mobile-card">
-          <img
-            className="mobile-card-background"
-            src={mobileContainerBackground}
-            alt=""
-            aria-hidden="true"
-          />
-
+          </h1>
           <div className="mobile-card-content">
+            <div>
+            <img src={tanishq30image} alt="tanishq-30" className="tanishq30img"/>
+          </div>
             <div className="mobile-form">
               <label className="mobile-field">
                 <span className="mobile-field-label">Name :</span>
@@ -312,11 +307,96 @@ function MobileHomePage() {
               </button>
             </div>
           </div>
-        </section>
       </div>
     </ScreenPage>
   );
 }
+// function MobileHomePage() {
+//   const navigate = useNavigate();
+//   const { draft, setDraft } = useSubmissionDraft();
+//   const hasRequiredDraftFields =
+//     draft.guestName.trim() && draft.personalizedMessage.trim();
+
+//   function updateDraft(field, value) {
+//     setDraft((currentDraft) => ({
+//       ...currentDraft,
+//       [field]: value,
+//     }));
+//   }
+
+//   return (
+//     <ScreenPage background={mobilePageBackground} className="mobile-home-page">
+//       <div className="mobile-shell">
+       
+
+//         <section className="mobile-card">
+
+//           <h1 className="mobile-home-title">
+//               Write my wishes to Tanishq
+//           <br />
+//           for 30 years
+//           </h1>
+
+//           {/* <img
+//             className="mobile-card-background"
+//             src={mobileContainerBackground}
+//             alt=""
+//             aria-hidden="true"
+//           /> */}
+
+//           <div className="mobile-card-content">
+//             <div className="mobile-form">
+//               <label className="mobile-field">
+//                 <span className="mobile-field-label">Name :</span>
+//                 <input
+//                   className="mobile-field-input"
+//                   type="text"
+//                   name="guestName"
+//                   placeholder="Enter your name"
+//                   value={draft.guestName}
+//                   onChange={(event) => updateDraft("guestName", event.target.value)}
+//                 />
+//               </label>
+
+//               <label className="mobile-field mobile-field-message">
+//                 <span className="mobile-field-label">Personalised message :</span>
+//                 <textarea
+//                   className="mobile-field-input mobile-field-textarea"
+//                   name="message"
+//                   placeholder="Write your message"
+//                   rows="3"
+//                   value={draft.personalizedMessage}
+//                   onChange={(event) =>
+//                     updateDraft("personalizedMessage", event.target.value)
+//                   }
+//                 />
+//               </label>
+//             </div>
+
+//             <div className="mobile-actions">
+//               <button
+//                 type="button"
+//                 className="mobile-action-button"
+//                 disabled={!hasRequiredDraftFields}
+//                 onClick={() => navigate("/mobile/photo")}
+//               >
+//                 Click my photo for Tanishq 30 years
+//               </button>
+//               <button
+//                 type="button"
+//                 className="mobile-action-button"
+//                 disabled={!hasRequiredDraftFields}
+//                 onClick={() => navigate("/mobile/video")}
+//               >
+//                 Record my wish for Tanishq 30 years
+//               </button>
+//             </div>
+//           </div>
+//         </section>
+//       </div>
+//     </ScreenPage>
+//   );
+// }
 
 function MobileVideoPage() {
   const navigate = useNavigate();

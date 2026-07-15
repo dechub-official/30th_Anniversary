@@ -44,6 +44,10 @@ select {
   position: relative;
   width: 100%;
   min-height: inherit;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
 }
 
 .cta-button {
@@ -86,45 +90,31 @@ select {
 }
 
 .qr-heading {
-  position: absolute;
-  top: 21.5%;
-  left: 50%;
   width: min(80vw, 700px);
-  margin: 0;
   color: #1c1c1c;
   font-family: "Italianno", cursive;
   font-size: clamp(28px, 3vw, 40px);
   font-weight: 400;
   line-height: 1;
   letter-spacing: 0;
-  text-align: center;
-  transform: translateX(-50%);
+  text-align:center;
 }
 
 .qr-code {
-  position: absolute;
-  top: 43%;
-  left: 50%;
   width: clamp(150px, 15vw, 200px);
   height: clamp(150px, 15vw, 200px);
   object-fit: contain;
-  transform: translate(-50%, -50%);
 }
 
 .qr-caption {
-  position: absolute;
-  top: 58%;
-  left: 50%;
   width: 140px;
-  margin: 0;
   color: #1c1c1c;
   font-family: "Italiana", serif;
   font-size: clamp(20px, 1.8vw, 24px);
   font-weight: 400;
   line-height: 1.21;
   letter-spacing: 0;
-  text-align: center;
-  transform: translateX(-50%);
+  text-align:center;
 }
 
 .mobile-home-page {
@@ -154,13 +144,12 @@ select {
 .mobile-shell {
   display: flex;
   flex-direction: column;
+  justify-contents:center;
   align-items: center;
-  width: min(100%, 393px);
-  min-height: 100svh;
   margin: 0 auto;
   padding:
     max(40px, env(safe-area-inset-top))
-    14px
+    60px
     max(28px, env(safe-area-inset-bottom));
   gap: 18px;
 }
@@ -168,19 +157,27 @@ select {
 .mobile-home-title {
   width: min(100%, 300px);
   margin: 0;
-  position: relative;
   font-family: "Italianno", cursive;
   font-size: clamp(28px, 8vw, 32px);
   font-weight: 400;
   line-height: 1;
   letter-spacing: 0;
-  text-align: center;
+  text-align:center;
+}
+
+.tanishq30img
+{
+  width:100%;
 }
 
 .mobile-card {
   position: relative;
   width: min(100%, 370px);
   aspect-ratio: 370 / 556;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .mobile-card-background {
@@ -192,18 +189,7 @@ select {
 }
 
 .mobile-card-content {
-  position: relative;
-  z-index: 1;
   width: 100%;
-  height: 100%;
-}
-
-.mobile-form {
-  position: absolute;
-  top: 32.75%;
-  left: 50%;
-  width: 64.45%;
-  transform: translateX(-50%);
 }
 
 .mobile-field {
@@ -254,13 +240,9 @@ select {
 }
 
 .mobile-actions {
-  position: absolute;
-  bottom: 20%;
-  left: 50%;
   display: grid;
   gap: clamp(10px, 3vw, 18px);
-  width: 64.45%;
-  transform: translateX(-50%);
+  margin-top:20px
 }
 
 .mobile-action-button {
@@ -546,7 +528,7 @@ select {
 @media (max-width: 420px) {
   .mobile-shell {
     width: 100%;
-    gap:10px;
+    gap:30px;
   }
 
   .mobile-card,
@@ -556,7 +538,7 @@ select {
 
   .mobile-field {
     gap: 4px;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
   }
 
   .mobile-field-input {
