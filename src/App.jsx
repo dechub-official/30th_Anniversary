@@ -252,16 +252,16 @@ function MobileHomePage() {
   return (
     <ScreenPage background={mobilePageBackground} className="mobile-home-page">
       <div className="mobile-shell">
-          <h1 className="mobile-home-title">
-              Write my wishes to Tanishq
-          <br />
-          for 30 years
-          </h1>
           <div className="mobile-card-content">
             <div>
             <img src={tanishq30image} alt="tanishq-30" className="tanishq30img"/>
           </div>
-            <div className="mobile-form">
+          <h1 className="mobile-home-title">
+              Write your wishes to Tanishq
+          <br />
+          for 30 years
+          </h1>
+          <div className="mobile-form">
               <label className="mobile-field">
                 <span className="mobile-field-label">Name :</span>
                 <input
@@ -620,13 +620,7 @@ function MobileVideoPage() {
   return (
     <ScreenPage background={mobilePageBackground} className="mobile-video-page">
       <div className="mobile-shell">
-        <h1 className="mobile-video-title">
-          Record my video for Tanishq
-          <br />
-          30 years
-        </h1>
-
-        <section className="mobile-video-card">
+          <section className="mobile-video-card">
           <div className="mobile-video-card-content">
             <div className="mobile-video-preview-shell">
               <video
@@ -863,12 +857,6 @@ function MobilePhotoPage() {
   return (
     <ScreenPage background={mobilePageBackground} className="mobile-photo-page">
       <div className="mobile-shell">
-        <h1 className="mobile-video-title">
-          Click my photo for Tanishq
-          <br/>
-          30 years
-        </h1>
-
         <section className="mobile-video-card">
           <div className="mobile-video-card-content">
             <div className="mobile-video-preview-shell mobile-photo-preview-shell">
