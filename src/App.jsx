@@ -149,15 +149,17 @@ function syncCanvasFrame(video, canvas) {
   //     ? canvasBounds.width / canvasBounds.height
   //     : 9 / 16;
 
-  const targetRatio = 1/1;
+  const targetRatio = 9/16;
 
   const dominantSourceDimension = Math.max(sourceWidth, sourceHeight);
   const nextHeight = Math.max(1, Math.round(dominantSourceDimension));
   const nextWidth = Math.max(1, Math.round(nextHeight * targetRatio));
 
   if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
-    canvas.width = nextWidth;
-    canvas.height = nextHeight;
+    canvas.width = 250;
+    canvas.height = 500;
+    // canvas.width = nextWidth;
+    // canvas.height = nextHeight;
   }
 
   const context = canvas.getContext("2d");
