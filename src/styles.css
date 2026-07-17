@@ -582,3 +582,27 @@ select {
     min-height: 46px;
   }
 }
+
+@supports (-webkit-touch-callout: none) {
+  .screen-page {
+    min-height: 100dvh;
+  }
+
+  .mobile-video-card-content,
+  .mobile-video-card-overlay,
+  .mobile-video-preview-shell,
+  .mobile-video-preview,
+  .mobile-photo-preview {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  .mobile-video-card-overlay {
+    display: block;
+  }
+
+  .mobile-video-preview-shell {
+    overflow: hidden;
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+  }
+}
