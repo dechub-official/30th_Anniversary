@@ -588,7 +588,7 @@ select {
 
   .mobile-photo-page .mobile-shell,
   .mobile-video-page .mobile-shell {
-    padding: 30px 14px calc(20px + env(safe-area-inset-bottom));
+    padding: 40px 14px calc(20px + env(safe-area-inset-bottom));
     gap: 12px;
   }
 
