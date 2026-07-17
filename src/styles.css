@@ -565,7 +565,7 @@ select {
 @media (max-width: 420px) {
   .mobile-shell {
     width: 100%;
-    padding: 0 14px 24px;
+    padding: 24px 14px 24px;
     gap:30px;
   }
 
