@@ -401,10 +401,10 @@ select {
 
 .mobile-video-record-button {
   position: absolute;
-  bottom: 10%;
+  bottom: 1%;
   left: 50%;
   width: 56%;
-  min-height: 27px;
+  min-height: 35px;
   border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 21.79px;
   background:
