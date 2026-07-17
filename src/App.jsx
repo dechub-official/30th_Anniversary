@@ -141,13 +141,16 @@ function blobToDataUrl(blob) {
 }
 
 function syncCanvasFrame(video, canvas) {
-  const sourceWidth = video.videoWidth || 720;
-  const sourceHeight = video.videoHeight || 1280;
+  const sourceWidth = video.videoWidth ;
+  const sourceHeight = video.videoHeight;
   const canvasBounds = canvas.getBoundingClientRect();
-  const targetRatio =
-    canvasBounds.width > 0 && canvasBounds.height > 0
-      ? canvasBounds.width / canvasBounds.height
-      : 9 / 16;
+  // const targetRatio =
+  //   canvasBounds.width > 0 && canvasBounds.height > 0
+  //     ? canvasBounds.width / canvasBounds.height
+  //     : 9 / 16;
+
+  const targetRatio = 16/16;
+
   const dominantSourceDimension = Math.max(sourceWidth, sourceHeight);
   const nextHeight = Math.max(1, Math.round(dominantSourceDimension));
   const nextWidth = Math.max(1, Math.round(nextHeight * targetRatio));
