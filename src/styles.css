@@ -189,7 +189,7 @@ select {
 .mobile-card {
   position: relative;
   width: min(100%, 370px);
-  aspect-ratio: 370 / 556;
+  aspect-ratio: 370 / 700;
   display: flex;
   flex-direction: column;
   justify-content: center;
