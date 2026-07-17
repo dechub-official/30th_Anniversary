@@ -332,10 +332,10 @@ select {
 
 .mobile-video-preview-shell {
   position: absolute;
-  top: 8.5%;
-  left: 7.8%;
-  width: 84.4%;
-  height: 77.8%;
+  top: 7.5%;
+  left: 4.8%;
+  width: 90.4%;
+  height: 86.8%;
   border-radius: 18px;
   overflow: hidden;
   background: rgba(255, 247, 235, 0.9);
