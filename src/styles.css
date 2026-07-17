@@ -151,6 +151,10 @@ select {
   gap: 18px;
 }
 
+.mobile-home-page .mobile-shell {
+  padding: 0 60px;
+}
+
 .mobile-consent-shell
 {
   padding-top:25% ;
@@ -563,6 +567,10 @@ select {
     width: 100%;
     padding: 0 14px 24px;
     gap:30px;
+  }
+
+  .mobile-home-page .mobile-shell {
+    padding: 0 60px;
   }
 
   .mobile-card,
