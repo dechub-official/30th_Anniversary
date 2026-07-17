@@ -13,13 +13,45 @@ import mobileVideoFrameOverlay from "./assets/images/mobile/mobile-page-containe
 import mobileContainerBackground from "./assets/images/mobile/mobile-page-container-bc-image.png";
 import mobilePageBackground from "./assets/images/mobile/mobile-page-bc-image.png";
 import qrBackground from "./assets/images/qr/qr-page-image.png";
-import qrImage from "./assets/images/qr/qr.png";
+import qrImage from "./assets/images/qr/Untitled.jpeg";
 import tanishq30image from "./assets/images/mobile/tanishq-30.png";
 import tanishqlogo from "./assets/images/mobile/tanishq-logo.png";
 
 const MOBILE_DRAFT_STORAGE_KEY = "tanishq-mobile-draft";
 const MOBILE_SUBMISSION_STORAGE_KEY = "tanishq-mobile-submission-id";
+const MOBILE_SUBMISSIONS_STORAGE_KEY = "tanishq-mobile-submissions";
 const SubmissionContext = createContext(null);
+
+function readStoredSubmissions() {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const storedSubmissions = window.localStorage.getItem(
+      MOBILE_SUBMISSIONS_STORAGE_KEY,
+    );
+
+    if (!storedSubmissions) {
+      return [];
+    }
+
+    return JSON.parse(storedSubmissions);
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredSubmissions(submissions) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(
+    MOBILE_SUBMISSIONS_STORAGE_KEY,
+    JSON.stringify(submissions),
+  );
+}
 
 function readStoredDraft() {
   if (typeof window === "undefined") {
@@ -162,37 +194,54 @@ function syncCanvasFrame(video, canvas) {
 }
 
 async function submitSubmission(payload) {
-  const response = await fetch("/api/submissions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const errorPayload = await response.json().catch(() => ({}));
-    throw new Error(errorPayload.error || "Unable to submit this greeting.");
+  if (typeof window === "undefined") {
+    throw new Error("Submissions are only available in the browser.");
   }
 
-  return response.json();
+  const submissions = readStoredSubmissions();
+  const submissionId = globalThis.crypto?.randomUUID?.() || `${Date.now()}`;
+  const submittedAt = new Date().toISOString();
+
+  submissions.push({
+    submissionId,
+    submittedAt,
+    ...payload,
+    consentStatus: "pending",
+    consentAt: null,
+  });
+
+  writeStoredSubmissions(submissions);
+
+  return { ok: true, submissionId, savedAt: submittedAt };
 }
 
 async function updateSubmissionConsent(payload) {
-  const response = await fetch("/api/submissions", {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const errorPayload = await response.json().catch(() => ({}));
-    throw new Error(errorPayload.error || "Unable to save consent choice.");
+  if (typeof window === "undefined") {
+    throw new Error("Consent updates are only available in the browser.");
   }
 
-  return response.json();
+  const submissions = readStoredSubmissions();
+  const submissionIndex = submissions.findIndex(
+    (item) => item.submissionId === payload.submissionId,
+  );
+
+  if (submissionIndex === -1) {
+    throw new Error("Submission not found.");
+  }
+
+  submissions[submissionIndex] = {
+    ...submissions[submissionIndex],
+    consentStatus: payload.consentStatus,
+    consentAt: new Date().toISOString(),
+  };
+
+  writeStoredSubmissions(submissions);
+
+  return {
+    ok: true,
+    submissionId: payload.submissionId,
+    consentStatus: payload.consentStatus,
+  };
 }
 
 function ScreenPage({ className = "", children, background }) {
@@ -415,6 +464,19 @@ function MobileVideoPage() {
   const [recordedUrl, setRecordedUrl] = useState("");
   const [recordedBlob, setRecordedBlob] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+
+  useEffect(() => {
+    if (recordingState !== "recording") {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setRecordingSeconds((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [recordingState]);
 
   useEffect(() => {
     return () => {
@@ -508,6 +570,7 @@ function MobileVideoPage() {
     if (recordingState === "recording" && recorderRef.current) {
       recorderRef.current.stop();
       setRecordingState("processing");
+      setRecordingSeconds(0);
       return;
     }
 
@@ -522,6 +585,7 @@ function MobileVideoPage() {
 
       setRecordedBlob(null);
       setPreviewMode("live");
+      setRecordingSeconds(0);
       chunksRef.current = [];
       const previewCanvas = livePreviewCanvasRef.current;
       const canvasStream = previewCanvas?.captureStream?.(30);
@@ -562,6 +626,7 @@ function MobileVideoPage() {
         setRecordedUrl(nextUrl);
         setPreviewMode("recorded");
         setRecordingState("ready");
+        setRecordingSeconds(0);
       });
 
       recorder.start();
@@ -612,6 +677,12 @@ function MobileVideoPage() {
 
       setSubmissionId(submission.submissionId || "");
       navigate("/mobile/consent");
+    } catch (error) {
+      alert(
+        `Submission failed: ${
+          error instanceof Error ? error.message : "Unknown error occurred"
+        }`,
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -621,6 +692,14 @@ function MobileVideoPage() {
     <ScreenPage background={mobilePageBackground} className="mobile-video-page">
       <div className="mobile-shell">
           <section className="mobile-video-card">
+          {recordingState === "recording" && (
+            <div className="recording-indicator">
+              <span className="recording-indicator-dot" />
+              {String(Math.floor(recordingSeconds / 60)).padStart(1, "0")}:{String(
+                recordingSeconds % 60
+              ).padStart(2, "0")}
+            </div>
+          )}
           <div className="mobile-video-card-content">
             <div className="mobile-video-preview-shell">
               <video
@@ -849,6 +928,12 @@ function MobilePhotoPage() {
 
       setSubmissionId(submission.submissionId || "");
       navigate("/mobile/consent");
+    } catch (error) {
+      alert(
+        `Submission failed: ${
+          error instanceof Error ? error.message : "Unknown error occurred"
+        }`,
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -948,6 +1033,12 @@ function MobileConsentPage() {
       });
       setSubmissionId("");
       navigate("/mobile", { replace: true });
+    } catch (error) {
+      alert(
+        `Consent save failed: ${
+          error instanceof Error ? error.message : "Unknown error occurred"
+        }`,
+      );
     } finally {
       setIsSavingConsent(false);
     }
