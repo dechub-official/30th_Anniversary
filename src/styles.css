@@ -588,6 +588,29 @@ select {
     min-height: 100dvh;
   }
 
+  .mobile-video-card {
+    aspect-ratio: 372 / 671;
+  }
+
+  .mobile-video-card-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    object-fit: fill;
+    display: block;
+  }
+
+  .mobile-video-preview-shell {
+    top: 8.8%;
+    left: 7.8%;
+    width: 85.8%;
+    height: 78.4%;
+    border-radius: 16px;
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+  }
+
   .mobile-video-card-content,
   .mobile-video-card-overlay,
   .mobile-video-preview-shell,
@@ -597,12 +620,7 @@ select {
     transform: translateZ(0);
   }
 
-  .mobile-video-card-overlay {
-    display: block;
-  }
-
-  .mobile-video-preview-shell {
-    overflow: hidden;
-    -webkit-mask-image: -webkit-radial-gradient(white, black);
+  .mobile-video-record-button {
+    bottom: 9.6%;
   }
 }
