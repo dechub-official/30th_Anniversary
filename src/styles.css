@@ -32,7 +32,6 @@ select {
   position: relative;
   min-height: 100vh;
   min-height: 100svh;
-  min-height: 100dvh;
   width: 100%;
   overflow-x: hidden;
   overflow-y: hidden;
@@ -45,10 +44,10 @@ select {
   position: relative;
   width: 100%;
   min-height: inherit;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
 }
 
 .cta-button {
@@ -147,17 +146,15 @@ select {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  min-height: inherit;
-  max-width: 420px;
   margin: 0 auto;
-  padding: 20px 18px 28px;
+  padding:0px 60px;
   gap: 18px;
 }
 
-.mobile-consent-shell {
-  padding-top: 25%;
-  padding-bottom: 25%;
+.mobile-consent-shell
+{
+  padding-top:25% ;
+  padding-bottom:25% ;
 }
 
 .mobile-home-title {
@@ -319,16 +316,16 @@ select {
 }
 
 .mobile-video-preview-shell {
-  position: absolute;
-  top: 7.2%;
-  right: 10.5%;
-  bottom: 18.2%;
-  left: 10.5%;
-  border-radius: 18px;
-  overflow: hidden;
-  background: rgba(255, 247, 235, 0.9);
-  z-index: 1;
-  height:88%;
+    position: absolute;
+    top: 5.15%;
+    left: -9%;
+    width: 120%;
+    height: 90%;
+    border-radius: 18px;
+    overflow: hidden;
+    background: rgba(255, 247, 235, 0.9);
+    z-index: 1;
+    height:88%;
 }
 
 .mobile-camera-source {
@@ -378,10 +375,10 @@ select {
 }
 
 .mobile-video-card-overlay {
-  position: absolute;
+  position: relative;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 135%;
+  left:-44px;
   object-fit: contain;
   pointer-events: none;
   z-index: 2;
@@ -563,12 +560,13 @@ select {
 
 @media (max-width: 420px) {
   .mobile-shell {
-    gap: 20px;
+    width: 100%;
+    gap:30px;
   }
 
   .mobile-card,
   .mobile-video-card {
-    width: 100%;
+    width: calc(100% - 18px);
   }
 
   .mobile-field {
