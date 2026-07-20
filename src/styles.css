@@ -440,6 +440,28 @@ select {
   flex: 0 0 auto;
 }
 
+.mobile-video-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mobile-zoom-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mobile-zoom-label {
+  font-size: 11px;
+  color: #1c1c1c;
+  margin-bottom: 4px;
+}
+
+.mobile-camera-source.mirrored {
+  transform: scaleX(-1);
+}
+
 .mobile-video-small-button,
 .mobile-video-small-button-edit {
   flex: 1 1 0;

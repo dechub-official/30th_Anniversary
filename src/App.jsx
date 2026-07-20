@@ -140,24 +140,25 @@ function blobToDataUrl(blob) {
   });
 }
 
-function syncCanvasFrame(video, canvas) {
-  const sourceWidth = video.videoWidth ;
+function syncCanvasFrame(video, canvas, mirror = false) {
+  const sourceWidth = video.videoWidth;
   const sourceHeight = video.videoHeight;
+  if (!sourceWidth || !sourceHeight) return false;
+
   const canvasBounds = canvas.getBoundingClientRect();
-  // const targetRatio =
-  //   canvasBounds.width > 0 && canvasBounds.height > 0
-  //     ? canvasBounds.width / canvasBounds.height
-  //     : 9 / 16;
+  const targetRatio = 10 / 17;
 
-  const targetRatio = 10/17;
+  // Base canvas size on the source video height to avoid over-zooming/upscaling.
+  let nextHeight = Math.max(1, Math.round(sourceHeight));
+  let nextWidth = Math.max(1, Math.round(nextHeight * targetRatio));
 
-  const dominantSourceDimension = Math.max(sourceWidth, sourceHeight);
-  const nextHeight = Math.max(1, Math.round(dominantSourceDimension));
-  const nextWidth = Math.max(1, Math.round(nextHeight * targetRatio));
+  // If calculated width would exceed the source width, fall back to using source width.
+  if (nextWidth > sourceWidth) {
+    nextWidth = sourceWidth;
+    nextHeight = Math.max(1, Math.round(nextWidth / targetRatio));
+  }
 
   if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
-    // canvas.width = 250;
-    // canvas.height = 500;
     canvas.width = nextWidth;
     canvas.height = nextHeight;
   }
@@ -168,8 +169,8 @@ function syncCanvasFrame(video, canvas) {
   }
 
   context.clearRect(0, 0, canvas.width, canvas.height);
-  const sourceRatio = sourceWidth / sourceHeight;
 
+  const sourceRatio = sourceWidth / sourceHeight;
   let cropWidth = sourceWidth;
   let cropHeight = sourceHeight;
   let cropX = 0;
@@ -183,17 +184,35 @@ function syncCanvasFrame(video, canvas) {
     cropY = (sourceHeight - cropHeight) / 2;
   }
 
-  context.drawImage(
-    video,
-    cropX,
-    cropY,
-    cropWidth,
-    cropHeight,
-    0,
-    0,
-    canvas.width,
-    canvas.height,
-  );
+  if (mirror) {
+    context.save();
+    context.translate(canvas.width, 0);
+    context.scale(-1, 1);
+    context.drawImage(
+      video,
+      cropX,
+      cropY,
+      cropWidth,
+      cropHeight,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
+    context.restore();
+  } else {
+    context.drawImage(
+      video,
+      cropX,
+      cropY,
+      cropWidth,
+      cropHeight,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
+  }
 
   return true;
 }
@@ -470,6 +489,10 @@ function MobileVideoPage() {
   const [recordedBlob, setRecordedBlob] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [mirrorPreview, setMirrorPreview] = useState(true);
+  const [zoomSupported, setZoomSupported] = useState(false);
+  const [zoomSettings, setZoomSettings] = useState({ min: 0, max: 0, step: 0 });
+  const [zoomValue, setZoomValue] = useState(null);
 
   useEffect(() => {
     if (recordingState !== "recording") {
@@ -518,7 +541,7 @@ function MobileVideoPage() {
       const canvas = livePreviewCanvasRef.current;
 
       if (video && canvas && video.readyState >= 2) {
-        syncCanvasFrame(video, canvas);
+        syncCanvasFrame(video, canvas, mirrorPreview);
       }
 
       animationFrameRef.current = window.requestAnimationFrame(drawFrame);
@@ -543,8 +566,26 @@ function MobileVideoPage() {
 
     streamRef.current = stream;
 
+    // detect zoom capability on the active video track
+    try {
+      const track = stream.getVideoTracks()[0];
+      if (track && typeof track.getCapabilities === "function") {
+        const caps = track.getCapabilities();
+        if (typeof caps.zoom !== "undefined") {
+          setZoomSupported(true);
+          setZoomSettings({ min: caps.zoom.min ?? 0, max: caps.zoom.max ?? 0, step: caps.zoom.step ?? 0 });
+          const currentZoom = track.getSettings().zoom ?? caps.zoom.min ?? null;
+          setZoomValue(currentZoom);
+        }
+      }
+    } catch (e) {
+      // ignore capability detection errors
+    }
+
     if (liveVideoRef.current) {
       liveVideoRef.current.srcObject = stream;
+      // show mirrored preview if requested (doesn't affect captured canvas since we draw mirror there too)
+      liveVideoRef.current.style.transform = mirrorPreview ? "scaleX(-1)" : "";
       await liveVideoRef.current.play().catch(() => {});
     }
 
@@ -562,6 +603,28 @@ function MobileVideoPage() {
     ];
 
     return preferredTypes.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+  }
+
+  async function applyZoom(value) {
+    try {
+      const track = streamRef.current?.getVideoTracks()[0];
+      if (track && typeof track.applyConstraints === "function") {
+        await track.applyConstraints({ advanced: [{ zoom: value }] });
+        setZoomValue(value);
+      }
+    } catch (e) {
+      // ignore inability to set zoom
+    }
+  }
+
+  function toggleMirror() {
+    setMirrorPreview((v) => {
+      const next = !v;
+      if (liveVideoRef.current) {
+        liveVideoRef.current.style.transform = next ? "scaleX(-1)" : "";
+      }
+      return next;
+    });
   }
 
   async function handleRecordClick() {
@@ -751,6 +814,31 @@ function MobileVideoPage() {
         </section>
 
         <div className="mobile-video-footer-actions">
+          <div className="mobile-video-controls">
+            <button
+              type="button"
+              className="mobile-video-small-button"
+              onClick={toggleMirror}
+              aria-pressed={mirrorPreview}
+            >
+              {mirrorPreview ? "Mirror: On" : "Mirror: Off"}
+            </button>
+
+            {zoomSupported ? (
+              <div className="mobile-zoom-control">
+                <label className="mobile-zoom-label">Zoom</label>
+                <input
+                  type="range"
+                  min={zoomSettings.min}
+                  max={zoomSettings.max}
+                  step={zoomSettings.step || 0.1}
+                  value={zoomValue ?? zoomSettings.min}
+                  onChange={(e) => applyZoom(Number(e.target.value))}
+                />
+              </div>
+            ) : null}
+          </div>
+
           <button
             type="button"
             className="mobile-video-small-button"
@@ -784,6 +872,10 @@ function MobilePhotoPage() {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoMode, setPhotoMode] = useState("idle");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mirrorPreview, setMirrorPreview] = useState(true);
+  const [zoomSupported, setZoomSupported] = useState(false);
+  const [zoomSettings, setZoomSettings] = useState({ min: 0, max: 0, step: 0 });
+  const [zoomValue, setZoomValue] = useState(null);
 
   useEffect(() => {
     return () => {
@@ -816,7 +908,7 @@ function MobilePhotoPage() {
       const canvas = livePreviewCanvasRef.current;
 
       if (video && canvas && video.readyState >= 2) {
-        syncCanvasFrame(video, canvas);
+        syncCanvasFrame(video, canvas, mirrorPreview);
       }
 
       animationFrameRef.current = window.requestAnimationFrame(drawFrame);
@@ -841,14 +933,53 @@ function MobilePhotoPage() {
 
     streamRef.current = stream;
 
+    // detect zoom capability on the active video track
+    try {
+      const track = stream.getVideoTracks()[0];
+      if (track && typeof track.getCapabilities === "function") {
+        const caps = track.getCapabilities();
+        if (typeof caps.zoom !== "undefined") {
+          setZoomSupported(true);
+          setZoomSettings({ min: caps.zoom.min ?? 0, max: caps.zoom.max ?? 0, step: caps.zoom.step ?? 0 });
+          const currentZoom = track.getSettings().zoom ?? caps.zoom.min ?? null;
+          setZoomValue(currentZoom);
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
     if (liveVideoRef.current) {
       liveVideoRef.current.srcObject = stream;
+      liveVideoRef.current.style.transform = mirrorPreview ? "scaleX(-1)" : "";
       await liveVideoRef.current.play().catch(() => {});
     }
 
     startCanvasLoop();
 
     return stream;
+  }
+
+  async function applyZoom(value) {
+    try {
+      const track = streamRef.current?.getVideoTracks()[0];
+      if (track && typeof track.applyConstraints === "function") {
+        await track.applyConstraints({ advanced: [{ zoom: value }] });
+        setZoomValue(value);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  function toggleMirror() {
+    setMirrorPreview((v) => {
+      const next = !v;
+      if (liveVideoRef.current) {
+        liveVideoRef.current.style.transform = next ? "scaleX(-1)" : "";
+      }
+      return next;
+    });
   }
 
   function stopPhotoStream() {
@@ -992,6 +1123,31 @@ function MobilePhotoPage() {
         </section>
 
         <div className="mobile-video-footer-actions">
+          <div className="mobile-video-controls">
+            <button
+              type="button"
+              className="mobile-video-small-button"
+              onClick={toggleMirror}
+              aria-pressed={mirrorPreview}
+            >
+              {mirrorPreview ? "Mirror: On" : "Mirror: Off"}
+            </button>
+
+            {zoomSupported ? (
+              <div className="mobile-zoom-control">
+                <label className="mobile-zoom-label">Zoom</label>
+                <input
+                  type="range"
+                  min={zoomSettings.min}
+                  max={zoomSettings.max}
+                  step={zoomSettings.step || 0.1}
+                  value={zoomValue ?? zoomSettings.min}
+                  onChange={(e) => applyZoom(Number(e.target.value))}
+                />
+              </div>
+            ) : null}
+          </div>
+
           <button
             type="button"
             className="mobile-video-small-button"
