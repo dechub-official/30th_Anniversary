@@ -489,10 +489,6 @@ function MobileVideoPage() {
   const [recordedBlob, setRecordedBlob] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
-  const [mirrorPreview, setMirrorPreview] = useState(true);
-  const [zoomSupported, setZoomSupported] = useState(false);
-  const [zoomSettings, setZoomSettings] = useState({ min: 0, max: 0, step: 0 });
-  const [zoomValue, setZoomValue] = useState(null);
 
   useEffect(() => {
     if (recordingState !== "recording") {
@@ -541,7 +537,7 @@ function MobileVideoPage() {
       const canvas = livePreviewCanvasRef.current;
 
       if (video && canvas && video.readyState >= 2) {
-        syncCanvasFrame(video, canvas, mirrorPreview);
+        syncCanvasFrame(video, canvas, true);
       }
 
       animationFrameRef.current = window.requestAnimationFrame(drawFrame);
@@ -558,34 +554,16 @@ function MobileVideoPage() {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: "user",
-        width: { ideal: 720 },
-        height: { ideal: 1280 },
+        aspectRatio: 9 / 16,
       },
       audio: true,
     });
 
     streamRef.current = stream;
 
-    // detect zoom capability on the active video track
-    try {
-      const track = stream.getVideoTracks()[0];
-      if (track && typeof track.getCapabilities === "function") {
-        const caps = track.getCapabilities();
-        if (typeof caps.zoom !== "undefined") {
-          setZoomSupported(true);
-          setZoomSettings({ min: caps.zoom.min ?? 0, max: caps.zoom.max ?? 0, step: caps.zoom.step ?? 0 });
-          const currentZoom = track.getSettings().zoom ?? caps.zoom.min ?? null;
-          setZoomValue(currentZoom);
-        }
-      }
-    } catch (e) {
-      // ignore capability detection errors
-    }
-
     if (liveVideoRef.current) {
       liveVideoRef.current.srcObject = stream;
-      // show mirrored preview if requested (doesn't affect captured canvas since we draw mirror there too)
-      liveVideoRef.current.style.transform = mirrorPreview ? "scaleX(-1)" : "";
+      liveVideoRef.current.style.transform = "scaleX(-1)";
       await liveVideoRef.current.play().catch(() => {});
     }
 
@@ -605,27 +583,6 @@ function MobileVideoPage() {
     return preferredTypes.find((type) => MediaRecorder.isTypeSupported(type)) || "";
   }
 
-  async function applyZoom(value) {
-    try {
-      const track = streamRef.current?.getVideoTracks()[0];
-      if (track && typeof track.applyConstraints === "function") {
-        await track.applyConstraints({ advanced: [{ zoom: value }] });
-        setZoomValue(value);
-      }
-    } catch (e) {
-      // ignore inability to set zoom
-    }
-  }
-
-  function toggleMirror() {
-    setMirrorPreview((v) => {
-      const next = !v;
-      if (liveVideoRef.current) {
-        liveVideoRef.current.style.transform = next ? "scaleX(-1)" : "";
-      }
-      return next;
-    });
-  }
 
   async function handleRecordClick() {
     if (
@@ -814,31 +771,6 @@ function MobileVideoPage() {
         </section>
 
         <div className="mobile-video-footer-actions">
-          <div className="mobile-video-controls">
-            <button
-              type="button"
-              className="mobile-video-small-button"
-              onClick={toggleMirror}
-              aria-pressed={mirrorPreview}
-            >
-              {mirrorPreview ? "Mirror: On" : "Mirror: Off"}
-            </button>
-
-            {zoomSupported ? (
-              <div className="mobile-zoom-control">
-                <label className="mobile-zoom-label">Zoom</label>
-                <input
-                  type="range"
-                  min={zoomSettings.min}
-                  max={zoomSettings.max}
-                  step={zoomSettings.step || 0.1}
-                  value={zoomValue ?? zoomSettings.min}
-                  onChange={(e) => applyZoom(Number(e.target.value))}
-                />
-              </div>
-            ) : null}
-          </div>
-
           <button
             type="button"
             className="mobile-video-small-button"
@@ -872,10 +804,6 @@ function MobilePhotoPage() {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoMode, setPhotoMode] = useState("idle");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mirrorPreview, setMirrorPreview] = useState(true);
-  const [zoomSupported, setZoomSupported] = useState(false);
-  const [zoomSettings, setZoomSettings] = useState({ min: 0, max: 0, step: 0 });
-  const [zoomValue, setZoomValue] = useState(null);
 
   useEffect(() => {
     return () => {
@@ -908,7 +836,7 @@ function MobilePhotoPage() {
       const canvas = livePreviewCanvasRef.current;
 
       if (video && canvas && video.readyState >= 2) {
-        syncCanvasFrame(video, canvas, mirrorPreview);
+        syncCanvasFrame(video, canvas, true);
       }
 
       animationFrameRef.current = window.requestAnimationFrame(drawFrame);
@@ -925,33 +853,16 @@ function MobilePhotoPage() {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: "user",
-        width: { ideal: 720 },
-        height: { ideal: 1280 },
+        aspectRatio: 9 / 16,
       },
       audio: false,
     });
 
     streamRef.current = stream;
 
-    // detect zoom capability on the active video track
-    try {
-      const track = stream.getVideoTracks()[0];
-      if (track && typeof track.getCapabilities === "function") {
-        const caps = track.getCapabilities();
-        if (typeof caps.zoom !== "undefined") {
-          setZoomSupported(true);
-          setZoomSettings({ min: caps.zoom.min ?? 0, max: caps.zoom.max ?? 0, step: caps.zoom.step ?? 0 });
-          const currentZoom = track.getSettings().zoom ?? caps.zoom.min ?? null;
-          setZoomValue(currentZoom);
-        }
-      }
-    } catch (e) {
-      // ignore
-    }
-
     if (liveVideoRef.current) {
       liveVideoRef.current.srcObject = stream;
-      liveVideoRef.current.style.transform = mirrorPreview ? "scaleX(-1)" : "";
+      liveVideoRef.current.style.transform = "scaleX(-1)";
       await liveVideoRef.current.play().catch(() => {});
     }
 
@@ -960,27 +871,6 @@ function MobilePhotoPage() {
     return stream;
   }
 
-  async function applyZoom(value) {
-    try {
-      const track = streamRef.current?.getVideoTracks()[0];
-      if (track && typeof track.applyConstraints === "function") {
-        await track.applyConstraints({ advanced: [{ zoom: value }] });
-        setZoomValue(value);
-      }
-    } catch (e) {
-      // ignore
-    }
-  }
-
-  function toggleMirror() {
-    setMirrorPreview((v) => {
-      const next = !v;
-      if (liveVideoRef.current) {
-        liveVideoRef.current.style.transform = next ? "scaleX(-1)" : "";
-      }
-      return next;
-    });
-  }
 
   function stopPhotoStream() {
     if (streamRef.current) {
@@ -1123,31 +1013,6 @@ function MobilePhotoPage() {
         </section>
 
         <div className="mobile-video-footer-actions">
-          <div className="mobile-video-controls">
-            <button
-              type="button"
-              className="mobile-video-small-button"
-              onClick={toggleMirror}
-              aria-pressed={mirrorPreview}
-            >
-              {mirrorPreview ? "Mirror: On" : "Mirror: Off"}
-            </button>
-
-            {zoomSupported ? (
-              <div className="mobile-zoom-control">
-                <label className="mobile-zoom-label">Zoom</label>
-                <input
-                  type="range"
-                  min={zoomSettings.min}
-                  max={zoomSettings.max}
-                  step={zoomSettings.step || 0.1}
-                  value={zoomValue ?? zoomSettings.min}
-                  onChange={(e) => applyZoom(Number(e.target.value))}
-                />
-              </div>
-            ) : null}
-          </div>
-
           <button
             type="button"
             className="mobile-video-small-button"
