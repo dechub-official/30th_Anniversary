@@ -145,78 +145,26 @@ function syncCanvasFrame(video, canvas, mirror = false) {
   const sourceHeight = video.videoHeight;
   if (!sourceWidth || !sourceHeight) return false;
 
-  const canvasBounds = canvas.getBoundingClientRect();
-  const targetRatio = 10 / 17;
+    if (canvas.width !== sourceWidth || canvas.height !== sourceHeight) {
+      canvas.width = sourceWidth;
+      canvas.height = sourceHeight;
+    }
 
-  // Base canvas size on the source video height to avoid over-zooming/upscaling.
-  let nextHeight = Math.max(1, Math.round(sourceHeight));
-  let nextWidth = Math.max(1, Math.round(nextHeight * targetRatio));
+    const context = canvas.getContext("2d");
+    if (!context) {
+      return false;
+    }
 
-  // If calculated width would exceed the source width, fall back to using source width.
-  if (nextWidth > sourceWidth) {
-    nextWidth = sourceWidth;
-    nextHeight = Math.max(1, Math.round(nextWidth / targetRatio));
-  }
+    context.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
-    canvas.width = nextWidth;
-    canvas.height = nextHeight;
-  }
-
-  const context = canvas.getContext("2d");
-  if (!context) {
-    return false;
-  }
-
-  context.clearRect(0, 0, canvas.width, canvas.height);
-
-  const sourceRatio = sourceWidth / sourceHeight;
-  let cropWidth = sourceWidth;
-  let cropHeight = sourceHeight;
-  let cropX = 0;
-  let cropY = 0;
-
-  if (sourceRatio > targetRatio) {
-    cropWidth = sourceHeight * targetRatio;
-    cropX = (sourceWidth - cropWidth) / 2;
-  } else if (sourceRatio < targetRatio) {
-    cropHeight = sourceWidth / targetRatio;
-    cropY = (sourceHeight - cropHeight) / 2;
-  }
-
-  if (mirror) {
-    context.save();
-    context.translate(canvas.width, 0);
-    context.scale(-1, 1);
-    context.drawImage(
-      video,
-      cropX,
-      cropY,
-      cropWidth,
-      cropHeight,
-      0,
-      0,
-      canvas.width,
-      canvas.height,
-    );
-    context.restore();
-  } else {
-    context.drawImage(
-      video,
-      cropX,
-      cropY,
-      cropWidth,
-      cropHeight,
-      0,
-      0,
-      canvas.width,
-      canvas.height,
-    );
-  }
-
-  return true;
-}
-
+    if (mirror) {
+      context.save();
+      context.translate(canvas.width, 0);
+      context.scale(-1, 1);
+      context.drawImage(video, 0, 0, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+      context.restore();
+    } else {
+      context.drawImage(video, 0, 0, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
 async function submitSubmission(payload) {
   if (typeof window === "undefined") {
     throw new Error("Submissions are only available in the browser.");
@@ -554,7 +502,6 @@ function MobileVideoPage() {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: "user",
-        aspectRatio: 9 / 16,
       },
       audio: true,
     });
@@ -853,7 +800,6 @@ function MobilePhotoPage() {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: "user",
-        aspectRatio: 9 / 16,
       },
       audio: false,
     });
