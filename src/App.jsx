@@ -165,6 +165,11 @@ function syncCanvasFrame(video, canvas, mirror = false) {
       context.restore();
     } else {
       context.drawImage(video, 0, 0, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+    }
+
+    return true;
+  }
+
 async function submitSubmission(payload) {
   if (typeof window === "undefined") {
     throw new Error("Submissions are only available in the browser.");
