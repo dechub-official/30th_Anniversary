@@ -157,14 +157,29 @@ function syncCanvasFrame(video, canvas, mirror = false) {
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
+    const targetRatio = canvas.width / canvas.height;
+    const sourceRatio = sourceWidth / sourceHeight;
+    let sx = 0;
+    let sy = 0;
+    let sw = sourceWidth;
+    let sh = sourceHeight;
+
+    if (sourceRatio > targetRatio) {
+      sw = sourceHeight * targetRatio;
+      sx = (sourceWidth - sw) / 2;
+    } else if (sourceRatio < targetRatio) {
+      sh = sourceWidth / targetRatio;
+      sy = (sourceHeight - sh) / 2;
+    }
+
     if (mirror) {
       context.save();
       context.translate(canvas.width, 0);
       context.scale(-1, 1);
-      context.drawImage(video, 0, 0, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+      context.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
       context.restore();
     } else {
-      context.drawImage(video, 0, 0, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+      context.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
     }
 
     return true;
