@@ -13,7 +13,7 @@ import mobileVideoFrameOverlay from "./assets/images/mobile/mobile-page-containe
 import mobileContainerBackground from "./assets/images/mobile/mobile-page-container-bc-image.png";
 import mobilePageBackground from "./assets/images/mobile/mobile-page-bc-image.png";
 import qrBackground from "./assets/images/qr/qr-page-image.png";
-import qrImage from "./assets/images/qr/Untitled.jpeg";
+import qrImage from "./assets/images/qr/Untitled.png";
 import tanishq30image from "./assets/images/mobile/tanishq-30.png";
 import tanishqlogo from "./assets/images/mobile/tanishq-logo.png";
 
